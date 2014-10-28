@@ -66,7 +66,7 @@ AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
 
 #   --with-firewall     for setting what blocking backend to use
 AC_ARG_WITH(firewall,
-[  --with-firewall=< pf | ipfw | iptables | ipfilter | hosts | aix | null >
+[  --with-firewall=< pf | ipfw | iptables | firewalld | ipfilter | hosts | aix | null >
                           Select the firewall backend],
 [
  FWALLSDIR="src/fwalls"
@@ -130,6 +130,18 @@ AC_ARG_WITH(firewall,
             AC_MSG_WARN([iptables program not in path! Using /sbin as default unless --with-iptables specified])
         fi
         ;;
+     firewalld)
+	cp $FWALLSDIR/command_firewalld.h $FWALLSDIR/command.h
+	usefirewalld=true
+	# is firewall-cmd in PATH ?
+	AC_CHECK_PROG(firewalldpath, firewall-cmd, `which firewall-cmd | xargs dirname`, "")
+	if test x$firewalldxpath = x
+	then
+		# if firewalld is not in PATH not, use "/usr/bin" as default path
+		firewalldpath=/usr/bin
+		AC_MSG_WARN([firewalld program not in path! Using /usr/bin as default unless --with-firewalld specified])
+	fi
+	;;
      pf)
         cp $FWALLSDIR/command_pf.h $FWALLSDIR/command.h
         usepf=true
@@ -167,6 +179,8 @@ AM_CONDITIONAL(FWALL_IPFW, test x$useipfw = xtrue)
 AM_CONDITIONAL(FWALL_HAS_IP6FW, test x$hasip6fw = xtrue)
 # IPTABLES chosen
 AM_CONDITIONAL(FWALL_IPTABLES, test x$useiptables = xtrue)
+# FIREWALLD chosen
+AM_CONDITIONAL(FWALL_FIREWALLD, test x$usefirewalld = xtrue)
 # PF chosen
 AM_CONDITIONAL(FWALL_PF, test x$usepf = xtrue)
 # NULL chosen
@@ -221,6 +235,18 @@ AC_ARG_WITH(iptables,
      AC_MSG_ERROR([Can not define define iptables path in this context, where iptables has not been chosen as firewall backend])
   else
      iptablespath=`dirname $withval`
+  fi
+])
+
+#   --with-firewalld         for setting firewalld path
+AC_ARG_WITH(firewalld,
+[  --with-firewalld=path     Specify the full path of the firewalld command
+                               (Default: autodetect from PATH)],
+[
+  if test x$usefirewalld != xtrue ; then
+     AC_MSG_ERROR([Can not define define firewalld path in this context, where firewalld has not been chosen as firewall backend])
+  else
+     firewalldpath=`dirname $withval`
   fi
 ])
 
@@ -300,6 +326,8 @@ AC_DEFINE_UNQUOTED(IPFW_PATH, "$ipfwpath", [path for the ipfw command])
 AC_DEFINE_UNQUOTED(IP6FW_PATH, "$ip6fwpath", [path for ip6fw command, use null if non-existent FreeBSD >=7])
 # define $iptablespath in config.h
 AC_DEFINE_UNQUOTED(IPTABLES_PATH, "$iptablespath", [path for the iptables command])
+# define $firewalldpath in config.h
+AC_DEFINE_UNQUOTED(FIREWALLD_PATH, "$firewalldpath", [path for the firewalld command])
 # define $ipfpath in config.h
 AC_DEFINE_UNQUOTED(IPFPATH, "$ipfpath", [path for the ipf command])
 # define $pfctlpath in config.h
@@ -324,6 +352,9 @@ if test x$useipfw = xtrue ; then
 fi
 if test x$useiptables = xtrue ; then
     AC_MSG_NOTICE([Using $iptablespath as location for iptables])
+fi
+if test x$usefirewalld = xtrue ; then
+    AC_MSG_NOTICE([Using $firewalldpath as location for firewalld])
 fi
 if test x$usepf = xtrue ; then
     AC_MSG_NOTICE([Using $pfctlpath as location for pfctl])
