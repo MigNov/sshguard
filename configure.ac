@@ -66,7 +66,7 @@ AM_CONDITIONAL([DEBUG], [test x$debug = xtrue])
 
 #   --with-firewall     for setting what blocking backend to use
 AC_ARG_WITH(firewall,
-[  --with-firewall=< pf | ipfw | iptables | firewalld | ipfilter | hosts | aix | null >
+[  --with-firewall=< pf | ipfw | iptables | firewalld | custom | ipfilter | hosts | aix | null >
                           Select the firewall backend],
 [
  FWALLSDIR="src/fwalls"
@@ -142,6 +142,10 @@ AC_ARG_WITH(firewall,
 		AC_MSG_WARN([firewalld program not in path! Using /usr/bin as default unless --with-firewalld specified])
 	fi
 	;;
+     custom)
+        cp $FWALLSDIR/command_custom.h $FWALLSDIR/command.h
+        usecustom=true
+        ;;
      pf)
         cp $FWALLSDIR/command_pf.h $FWALLSDIR/command.h
         usepf=true
@@ -181,6 +185,8 @@ AM_CONDITIONAL(FWALL_HAS_IP6FW, test x$hasip6fw = xtrue)
 AM_CONDITIONAL(FWALL_IPTABLES, test x$useiptables = xtrue)
 # FIREWALLD chosen
 AM_CONDITIONAL(FWALL_FIREWALLD, test x$usefirewalld = xtrue)
+# CUSTOM chosen
+AM_CONDITIONAL(FWALL_FIREWALLD, test x$usecustom = xtrue)
 # PF chosen
 AM_CONDITIONAL(FWALL_PF, test x$usepf = xtrue)
 # NULL chosen
@@ -250,6 +256,18 @@ AC_ARG_WITH(firewalld,
   fi
 ])
 
+#   --with-custom         for setting custom handler path
+AC_ARG_WITH(custom,
+[  --with-custom=path     Specify the full path of the custom command
+                               (required)],
+[
+  if test x$usecustom != xtrue ; then
+     AC_MSG_ERROR([Can not define define custom path in this context, where custom handler has not been chosen as firewall backend])
+  else
+     custompath="$withval"
+  fi
+])
+
 #   --with-pfctl        for setting pfctl path
 AC_ARG_WITH(pfctl,
 [  --with-pfctl=path       Specify the full path for the pfctl command
@@ -313,6 +331,12 @@ AC_ARG_WITH(ipfilterconf,
 [
     ipfconf=/etc/ipf.rules
 ])
+
+if test x$usecustom == xtrue; then
+    if test x$custompath == x; then
+        AC_MSG_ERROR([No custom handler path defined. Please define custom handler path using --with-custom option])
+    fi
+fi
  
 # define $genfiltpath in config.h
 AC_DEFINE_UNQUOTED(FILT_PATH, "$genfiltpath", [path for the genfilt command])
@@ -328,6 +352,8 @@ AC_DEFINE_UNQUOTED(IP6FW_PATH, "$ip6fwpath", [path for ip6fw command, use null i
 AC_DEFINE_UNQUOTED(IPTABLES_PATH, "$iptablespath", [path for the iptables command])
 # define $firewalldpath in config.h
 AC_DEFINE_UNQUOTED(FIREWALLD_PATH, "$firewalldpath", [path for the firewalld command])
+# define $custompath in config.h
+AC_DEFINE_UNQUOTED(CUSTOM_PATH, "$custompath", [path for the custom handler command])
 # define $ipfpath in config.h
 AC_DEFINE_UNQUOTED(IPFPATH, "$ipfpath", [path for the ipf command])
 # define $pfctlpath in config.h
