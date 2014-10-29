@@ -1,0 +1,41 @@
+# Example custom handler for sshguard
+# Written for iptables backend
+#
+# Written by Michal Novotny <mignov@gmail.com>
+#
+#!/bin/bash
+
+# Argument list:
+#
+# First argument is action, it has to be one of the following:
+#    init - initialize firewall connection and check for privileges
+#    finish - finalize firewall connection
+#    block - block address, accepts also SSHG_ADDRKING (e.g. 4) as argument 2 and SSHG_ADDR (IP address) as argument 3
+#    release - the same like above, except used for unblocking the addresses
+#    flush - flush all the addresses (remove them from blocking)
+#
+ACTION="$1"
+SSHG_ADDRKIND="$2"
+SSHG_ADDR="$3"
+if [ -z "$ACTION" ]; then
+	echo "Syntax: $0 <action> [<addr-kind> <address>]"
+	exit 1
+fi
+
+if [ "$ACTION" = "init" ]; then
+	iptables -L
+	rc="$?"
+elif [ "$ACTION" = "finish" ]; then
+	rc=0
+elif [ "$ACTION" = "block" ]; then
+	iptables -I sshguard -s $SSHG_ADDR -j DROP
+	rc="$?"
+elif [ "$ACTION" = "release" ]; then
+	iptables -D sshguard -s $SSHG_ADDR -j DROP
+	rc="$?"
+elif [ "$ACTION" = "flush" ]; then
+	iptables -F sshguard
+	rc="$?"
+fi
+
+exit $rc

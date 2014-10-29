@@ -1,0 +1,5 @@
+# Whitelist localhost address and all 127.0.0.1 block
+
+# Address blocks in CIDR notation
+127.0.0.0/8
+

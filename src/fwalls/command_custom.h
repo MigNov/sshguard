@@ -21,16 +21,16 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
-/* sample command.h content for netfilter/iptables */
+/* sample command.h content for custom handling */
 
 
 #include "../config.h"
 
 /* for initializing the firewall (+ make sure we have sufficient credentials) */
-#define COMMAND_INIT        FIREWALLD_PATH "/firewall-cmd --direct --get-rules ipv4 filter INPUT"
+#define COMMAND_INIT        CUSTOM_PATH " init"
 
 /* for finalizing the firewall */
-#define COMMAND_FIN         ""
+#define COMMAND_FIN         CUSTOM_PATH " finish"
 
 /* for blocking an IP */
 /* the command will have the following variables in its environment:
@@ -38,8 +38,7 @@
  *  $SSHG_ADDRKIND  the code of the address type [see sshguard_addresskind.h] (e.g. 4)
  *  $SSHG_SERVICE   the code of the service attacked [see sshguard_services.h] (e.g. 10)
  */
-//#define COMMAND_BLOCK       FIREWALLD_PATH "/firewall-cmd --zone=public --add-source=$SSHG_ADDR"
-#define COMMAND_BLOCK       FIREWALLD_PATH "/firewall-cmd --direct --add-rule ipv$SSHG_ADDRKIND filter INPUT 0 -s \"$SSHG_ADDR\" -j DROP"
+#define COMMAND_BLOCK       CUSTOM_PATH " block \"$SSHG_ADDRKIND\" \"$SSHG_ADDR\""
 
 /* iptables does not support blocking multiple addresses in one call.
  * COMMAND_BLOCK_LIST can not be provided here, a sequence of calls to
@@ -51,10 +50,10 @@
  *  $SSHG_ADDRKIND  the code of the address type [see sshguard_addresskind.h] (e.g. 4)
  *  $SSHG_SERVICE   the code of the service attacked [see sshguard_services.h] (e.g. 10)
  */
-#define COMMAND_RELEASE     FIREWALLD_PATH "/firewall-cmd --direct --remove-rule ipv$SSHG_ADDRKIND filter INPUT 0 -s \"$SSHG_ADDR\" -j DROP"
+#define COMMAND_RELEASE     CUSTOM_PATH " release \"$SSHG_ADDRKIND\" \"$SSHG_ADDR\""
 
 /* for releasing all blocked IPs at once (blocks flush) */
-#define COMMAND_FLUSH       "/bin/systemctl restart firewalld.service"
+#define COMMAND_FLUSH       CUSTOM_PATH " flush"
 
 #endif
 
