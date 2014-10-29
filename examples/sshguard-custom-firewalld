@@ -32,7 +32,7 @@ elif [ "$ACTION" = "block" ]; then
 	/bin/firewall-cmd --direct --add-rule ipv$SSHG_ADDRKIND filter INPUT 0 -s "$SSHG_ADDR" -j DROP
 	rc="$?"
 elif [ "$ACTION" = "release" ]; then
-	/bin/firewall-cmd --direct --remove-rule ipv$SSHG_ADDRKIND filter INPUT 0 -s "$SSHG_ADDR" -j DROP"
+	/bin/firewall-cmd --direct --remove-rule ipv$SSHG_ADDRKIND filter INPUT 0 -s "$SSHG_ADDR" -j DROP
 	rc="$?"
 elif [ "$ACTION" = "flush" ]; then
 	/bin/systemctl restart firewalld.service
