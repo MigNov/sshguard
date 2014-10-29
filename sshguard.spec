@@ -43,7 +43,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc Changes README examples/ scripts/
+%doc Changes README.md examples/ scripts/
 %{_sbindir}/sshguard
 %config %{_sysconfdir}/init.d/sshguard
 %doc %{_mandir}/man8/%{name}*
